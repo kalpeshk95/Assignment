@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.assignment.R
 import com.example.assignment.databinding.FragmentFundsBinding
-import com.example.assignment.databinding.FragmentOrderBinding
 
 class FundsFragment : Fragment(R.layout.fragment_funds) {
 

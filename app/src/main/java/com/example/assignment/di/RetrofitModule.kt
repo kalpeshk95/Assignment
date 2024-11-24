@@ -40,7 +40,7 @@ fun getRetrofit(okHttpClient: OkHttpClient): Retrofit {
     val json = Json { ignoreUnknownKeys = true } // Configure Json instance as needed
 
     return Retrofit.Builder()
-        .baseUrl("https://35dee773a9ec441e9f38d5fc249406ce.api.mockbin.io")
+        .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()

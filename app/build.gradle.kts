@@ -19,8 +19,21 @@ android {
     }
 
     buildTypes {
-        release {
+        debug {
             isMinifyEnabled = false
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"https://35dee773a9ec441e9f38d5fc249406ce.api.mockbin.io\""
+            )
+        }
+        release {
+            isMinifyEnabled = true
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"https://35dee773a9ec441e9f38d5fc249406ce.api.mockbin.io\""
+            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -47,9 +60,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-//    testImplementation(libs.junit)
-//    androidTestImplementation(libs.androidx.junit)
-//    androidTestImplementation(libs.androidx.espresso.core)
 
     // Lifecycle components
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -57,7 +67,6 @@ dependencies {
 
     // Retrofit dependencies
     implementation(libs.retrofit2.retrofit)
-//    implementation(libs.retrofit2.converter.gson)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
 

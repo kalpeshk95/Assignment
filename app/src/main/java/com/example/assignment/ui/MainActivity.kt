@@ -1,14 +1,9 @@
 package com.example.assignment.ui
 
-import android.os.Build
 import android.os.Bundle
-import android.view.View
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.example.assignment.R
 import com.example.assignment.databinding.ActivityMainBinding
 import com.example.assignment.ui.funds.FundsFragment

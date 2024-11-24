@@ -16,7 +16,6 @@
     <string name="portfolio">Portfolio</string>
     <string name="funds">Funds</string>
     <string name="invest">Invest</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="string_orders">Orders</string>
     <string name="string_watchlist">Watchlist</string>
