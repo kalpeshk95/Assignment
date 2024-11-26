@@ -75,6 +75,11 @@ class PortfolioVm(
             profitLossPercent = profitLossPercent,
         )
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        networkStatusHelper.unregister()
+    }
 }
 
 data class PortfolioState(
