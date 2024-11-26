@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -12,6 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.assignment.R
 import com.example.assignment.databinding.FragmentPortfolioBinding
 import com.example.assignment.utils.gone
+import com.example.assignment.utils.setTextColorRes
+import com.example.assignment.utils.showSnackBar
 import com.example.assignment.utils.toAmount
 import com.example.assignment.utils.visible
 import kotlinx.coroutines.launch
@@ -52,7 +53,9 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.portfolioState.collect { state ->
-                setBottomData(state) // Update UI with state
+                showLoading(state.isLoading)
+                handleNetworkStatus(state.isNetworkAvailable, state.errorMessage)
+                state.holdingList?.let { setBottomData(state) } // Update UI with state
             }
         }
     }
@@ -60,35 +63,49 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
     private fun showLoading(loading: Boolean) {
         with(binding) {
             if (loading) {
-                bottomView.gone()
+                bottomView.main.gone()
                 progressBar.visible()
             } else {
                 progressBar.gone()
-                bottomView.visible()
+                bottomView.main.visible()
             }
         }
     }
 
     private fun setBottomData(it: PortfolioState) {
-        showLoading(it.isLoading)
-        holdingAdapter.setItems(it.holdingList)
-        val todayPnLColor = if (it.todayPnL > 0) R.color.green else R.color.red
-        val profitLossColor = if (it.profitLoss > 0) R.color.green else R.color.red
+        it.holdingList?.let { holdingList ->
+            holdingAdapter.setItems(holdingList)
+            val todayPnLColor = if (it.todayPnL >= 0) R.color.green else R.color.red
+            val profitLossColor = if (it.profitLoss >= 0) R.color.green else R.color.red
+            binding.viewGroup.visible()
+            with(binding.bottomView) {
+                lblCurrentVal.text = requireContext().toAmount(it.currentVal)
+                lblTotalInv.text = requireContext().toAmount(it.totalInv)
+                lblTodayPnL.text = requireContext().toAmount(it.todayPnL)
+                lblTodayPnL.setTextColorRes(todayPnLColor)
+                lblProfitLoss.text = requireContext().toAmount(it.profitLoss)
+                lblProfitLossPer.text = getString(R.string.lbl_percentage, it.profitLossPercent)
+                lblProfitLoss.setTextColorRes(profitLossColor)
+                lblProfitLossPer.setTextColorRes(profitLossColor)
+            }
+        }
+    }
+
+    private fun handleNetworkStatus(isNetworkAvailable: Boolean, errorMessage: String?) {
         with(binding) {
-            lblCurrentVal.text = requireContext().toAmount(it.currentVal)
-            lblTotalInv.text = requireContext().toAmount(it.totalInv)
-            lblTodayPnL.text = requireContext().toAmount(it.todayPnL)
-            lblTodayPnL.setTextColor(ContextCompat.getColor(requireContext(), todayPnLColor))
-            lblProfitLoss.text = requireContext().toAmount(it.profitLoss)
-            lblProfitLossPer.text = getString(R.string.lbl_percentage, it.profitLossPercent)
-            lblProfitLoss.setTextColor(ContextCompat.getColor(requireContext(), profitLossColor))
-            lblProfitLossPer.setTextColor(ContextCompat.getColor(requireContext(), profitLossColor))
+            if (isNetworkAvailable) {
+                noInternetLayout.main.gone()
+            } else {
+                viewGroup.gone()
+                noInternetLayout.main.visible()
+                errorMessage?.let { root.showSnackBar(it, "OK") }
+            }
         }
     }
 
     private fun initClick() {
-        with(binding) {
-            binding.txtProfitLoss.setOnClickListener {
+        with(binding.bottomView) {
+            txtProfitLoss.setOnClickListener {
                 if (infoGroup.isGone) {
                     infoGroup.visible()
                     txtProfitLoss.setCompoundDrawablesWithIntrinsicBounds(
@@ -107,6 +124,10 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
                     )
                 }
             }
+        }
+
+        binding.noInternetLayout.retryButton.setOnClickListener {
+            viewModel.fetchHoldingData()
         }
     }
 

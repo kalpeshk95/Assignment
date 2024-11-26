@@ -2,7 +2,11 @@ package com.example.assignment.utils
 
 import android.content.Context
 import android.view.View
+import android.widget.TextView
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 import com.example.assignment.R
+import com.google.android.material.snackbar.Snackbar
 import kotlin.math.absoluteValue
 
 fun View.gone() {
@@ -11,6 +15,24 @@ fun View.gone() {
 
 fun View.visible() {
     this.visibility = View.VISIBLE
+}
+
+fun TextView.setTextColorRes(@ColorRes colorRes: Int) {
+    setTextColor(ContextCompat.getColor(context, colorRes))
+}
+
+fun View.showSnackBar(
+    msg: String,
+    actionText: String? = null,
+    action: ((View) -> Unit)? = null
+) {
+    val snackBar = Snackbar.make(this, msg, Snackbar.LENGTH_LONG)
+    if (actionText != null && action != null) {
+        snackBar.setAction(actionText) {
+            action(this)
+        }
+    }
+    snackBar.show()
 }
 
 fun Context.toAmount(amount: Double): String {

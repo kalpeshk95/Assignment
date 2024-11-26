@@ -22,4 +22,6 @@
     <string name="string_invest">Invest</string>
     <string name="string_funds">Funds</string>
     <string name="string_portfolio">Portfolio</string>
+    <string name="string_retry">Retry</string>
+    <string name="string_no_internet">Please check your internet connection\nand try again</string>
 </resources>

@@ -7,6 +7,7 @@ import com.example.assignment.data.model.UserHoldingItem
 import com.example.assignment.data.model.toHoldingData
 import com.example.assignment.data.repository.NetworkRepository
 import com.example.assignment.data.source.Resource
+import com.example.assignment.utils.NetworkStatusHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,38 +16,45 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
-class PortfolioVm(private val networkRepository: NetworkRepository) : ViewModel() {
+class PortfolioVm(
+    private val networkRepository: NetworkRepository,
+    private val networkStatusHelper: NetworkStatusHelper
+) : ViewModel() {
 
     private val _portfolioState = MutableStateFlow(PortfolioState(isLoading = true))
     val portfolioState: StateFlow<PortfolioState> = _portfolioState.asStateFlow()
-
-//    private val _holdingList = MutableStateFlow<List<HoldingData>?>(null)
-//    val holdingList: StateFlow<List<HoldingData>?> get() = _holdingList.asStateFlow()
-//
-//    private val _isLoading = MutableStateFlow(false)
-//    val isLoading get() = _isLoading.asStateFlow()
 
     init {
         fetchHoldingData()
     }
 
-    private fun fetchHoldingData() {
+    fun fetchHoldingData() {
         viewModelScope.launch {
-            networkRepository.fetchHoldingData().onEach {
-                when (it) {
-                    is Resource.Loading -> {
-                        _portfolioState.value = PortfolioState(isLoading = true)
-                    }
+            if (networkStatusHelper.isNetworkAvailable.value) {
+                networkRepository.fetchHoldingData().onEach {
+                    when (it) {
+                        is Resource.Loading -> {
+                            _portfolioState.value = PortfolioState(isLoading = true)
+                        }
 
-                    is Resource.Success -> {
-                        it.data?.let { list -> setData(list) }
-                    }
+                        is Resource.Success -> {
+                            it.data?.let { list -> setData(list) }
+                        }
 
-                    is Resource.Error -> {
-                        _portfolioState.value = PortfolioState(isLoading = true)
+                        is Resource.Error -> {
+                            _portfolioState.value = PortfolioState(
+                                errorMessage = it.exception.message, isLoading = false
+                            )
+                        }
                     }
-                }
-            }.launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
+            } else {
+                // Network is unavailable, update state
+                _portfolioState.value = PortfolioState(
+                    isLoading = false,
+                    isNetworkAvailable = false // Update network status
+                )
+            }
         }
     }
 
@@ -70,11 +78,13 @@ class PortfolioVm(private val networkRepository: NetworkRepository) : ViewModel(
 }
 
 data class PortfolioState(
-    val holdingList: List<HoldingData> = emptyList(),
+    val holdingList: List<HoldingData>? = null,
     val isLoading: Boolean = false,
     val currentVal: Double = 0.0,
     val totalInv: Double = 0.0,
     val todayPnL: Double = 0.0,
     val profitLoss: Double = 0.0,
-    val profitLossPercent: Double = 0.0
+    val profitLossPercent: Double = 0.0,
+    val errorMessage: String? = null,
+    val isNetworkAvailable: Boolean = true
 )

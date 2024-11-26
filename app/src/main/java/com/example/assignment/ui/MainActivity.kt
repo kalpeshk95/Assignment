@@ -29,7 +29,10 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, true)
         setContentView(binding.root)
+        initView()
+    }
 
+    private fun initView() {
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             handleNavigation(item.itemId)
             true

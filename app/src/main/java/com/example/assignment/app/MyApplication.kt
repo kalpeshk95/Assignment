@@ -2,6 +2,7 @@ package com.example.assignment.app
 
 import android.app.Application
 import com.example.assignment.BuildConfig
+import com.example.assignment.di.appModule
 import com.example.assignment.di.repoModule
 import com.example.assignment.di.retrofitModule
 import com.example.assignment.di.viewModelModule
@@ -28,6 +29,7 @@ class MyApplication : Application() {
 
             modules(
                 listOf(
+                    appModule,
                     repoModule,
                     retrofitModule,
                     viewModelModule
