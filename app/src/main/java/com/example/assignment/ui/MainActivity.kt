@@ -6,22 +6,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import com.example.assignment.R
 import com.example.assignment.databinding.ActivityMainBinding
-import com.example.assignment.ui.funds.FundsFragment
-import com.example.assignment.ui.invest.InvestFragment
-import com.example.assignment.ui.order.OrderFragment
+import com.example.assignment.ui.empty.EmptyFragment
 import com.example.assignment.ui.portfolio.PortfolioFragment
-import com.example.assignment.ui.watchlist.WatchlistFragment
 
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
     private val fragments = mapOf(
-        R.id.nav_watchlist to Pair(WatchlistFragment(), R.string.string_watchlist),
-        R.id.nav_orders to Pair(OrderFragment(), R.string.string_orders),
+        R.id.nav_watchlist to Pair(EmptyFragment(), R.string.string_watchlist),
+        R.id.nav_orders to Pair(EmptyFragment(), R.string.string_orders),
         R.id.nav_portfolio to Pair(PortfolioFragment(), R.string.string_portfolio),
-        R.id.nav_funds to Pair(FundsFragment(), R.string.string_funds),
-        R.id.nav_invest to Pair(InvestFragment(), R.string.string_invest)
+        R.id.nav_funds to Pair(EmptyFragment(), R.string.string_funds),
+        R.id.nav_invest to Pair(EmptyFragment(), R.string.string_invest)
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
