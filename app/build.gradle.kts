@@ -24,7 +24,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://35dee773a9ec441e9f38d5fc249406ce.api.mockbin.io\""
+                "\"https://5aee830d074845b089a674b85b53ebaf.api.mockbin.io\""
             )
         }
         release {
@@ -32,7 +32,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://35dee773a9ec441e9f38d5fc249406ce.api.mockbin.io\""
+                "\"https://5aee830d074845b089a674b85b53ebaf.api.mockbin.io\""
             )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
