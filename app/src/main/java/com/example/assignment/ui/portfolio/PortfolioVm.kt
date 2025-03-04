@@ -43,7 +43,7 @@ class PortfolioVm(
 
                         is Resource.Error -> {
                             _portfolioState.value = PortfolioState(
-                                errorMessage = it.exception.message, isLoading = false
+                                errorMessage = it.exception.toString(), isLoading = false
                             )
                         }
                     }

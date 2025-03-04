@@ -14,13 +14,9 @@ class NetworkRepository(private val network: Network) : NetworkManager {
 
     override fun fetchHoldingData(): Flow<Resource<List<UserHoldingItem>?>> = flow {
         emit(Resource.Loading)
-        try {
-            val holdingData = network.fetchHoldingData().data?.userHolding
-            emit(Resource.Success(holdingData))
-
-        } catch (e: Exception) {
-            emit(Resource.Error(e))
-        }
+        val result = runCatching { network.fetchHoldingData() }
+        result.onSuccess { emit(Resource.Success(it.data?.userHolding)) }
+        result.onFailure { emit(Resource.Error(it)) }
     }
 
 }
