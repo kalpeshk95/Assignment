@@ -3,6 +3,7 @@ package com.example.assignment.ui.portfolio
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.assignment.R
 import com.example.assignment.data.model.HoldingData
@@ -11,7 +12,7 @@ import com.example.assignment.utils.toAmount
 
 class HoldingAdapter : RecyclerView.Adapter<HoldingAdapter.ViewHolder>() {
 
-    private var employeeList = listOf<HoldingData>()
+    private var holdingList = emptyList<HoldingData>()
 
     class ViewHolder(val binding: HoldingListBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -20,15 +21,16 @@ class HoldingAdapter : RecyclerView.Adapter<HoldingAdapter.ViewHolder>() {
         return ViewHolder(binding)
     }
 
-    fun setItems(listItems: List<HoldingData>) {
-        employeeList = listItems
-        notifyDataSetChanged()
+    fun setItems(newList: List<HoldingData>) {
+        val diffResult = DiffUtil.calculateDiff(HoldingDiffCallback(holdingList, newList))
+        holdingList = newList
+        diffResult.dispatchUpdatesTo(this)
     }
 
-    override fun getItemCount() = employeeList.size
+    override fun getItemCount() = holdingList.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = employeeList[position]
+        val item = holdingList[position]
         with(holder.binding) {
             val context = holder.itemView.context
             lblSymbol.text = item.symbol
@@ -37,6 +39,26 @@ class HoldingAdapter : RecyclerView.Adapter<HoldingAdapter.ViewHolder>() {
             lblPnL.text = context.toAmount(item.pnl)
             val color = if (item.pnl > 0) R.color.green else R.color.red
             lblPnL.setTextColor(ContextCompat.getColor(context, color))
+        }
+    }
+
+    class HoldingDiffCallback(
+        private val oldList: List<HoldingData>,
+        private val newList: List<HoldingData>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldList.size
+
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            // Assuming 'symbol' is a unique identifier for HoldingData
+            return oldList[oldItemPosition].symbol == newList[newItemPosition].symbol
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            // Compare all properties to check if the content is the same
+            return oldList[oldItemPosition] == newList[newItemPosition]
         }
     }
 }
