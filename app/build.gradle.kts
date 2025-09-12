@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.assignment"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.assignment"
@@ -44,8 +44,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(17)
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+        }
     }
     buildFeatures {
         buildConfig = true
@@ -73,7 +76,7 @@ dependencies {
     // OkHttp dependencies
     implementation(libs.okhttp3.logging.interceptor)
 
-    //Koin
+    // Koin
     implementation(libs.android.koin)
 
 }
