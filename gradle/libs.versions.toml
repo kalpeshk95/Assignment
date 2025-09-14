@@ -5,39 +5,53 @@ coreKtx = "1.17.0"
 activity = "1.11.0"
 constraintlayout = "2.2.1"
 appcompat = "1.7.1"
+kotlinxCoroutinesAndroid = "1.10.2"
 material = "1.13.0"
 lifeCycle = "2.9.3"
 
+# Network
 retrofit2 = "3.0.0"
 okhttp3 = "5.1.0"
 kotlinxSerializationJson = "1.9.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 serialization = "2.2.20"
 
+# Dependency Injection
 koin = "4.1.1"
 
 
 [libraries]
+# AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+
+# Material Design
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
+# Lifecycle
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifeCycle" }
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifeCycle" }
 
+# Network
 retrofit2-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit2" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 retrofit2-kotlinx-serialization-converter = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
 
 okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp3" }
 
-android-koin = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+# Dependency Injection
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 
 [plugins]
+# Core plugins
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
+# Serialization plugin
 kotlinx-serialization = { id = "kotlinx-serialization" }
 jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serialization" }
 

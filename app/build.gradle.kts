@@ -21,34 +21,30 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"https://5aee830d074845b089a674b85b53ebaf.api.mockbin.io\""
-            )
         }
         release {
             isMinifyEnabled = true
-            buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"https://5aee830d074845b089a674b85b53ebaf.api.mockbin.io\""
-            )
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isShrinkResources = true
         }
     }
+
+    buildTypes.all {
+        buildConfigField(
+            "String",
+            "BASE_URL",
+            "\"https://5aee830d074845b089a674b85b53ebaf.api.mockbin.io\""
+        )
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         jvmToolchain(17)
-        compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
-        }
     }
     buildFeatures {
         buildConfig = true
@@ -64,6 +60,9 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+    // For Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
     // Lifecycle components
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -77,6 +76,6 @@ dependencies {
     implementation(libs.okhttp3.logging.interceptor)
 
     // Koin
-    implementation(libs.android.koin)
+    implementation(libs.koin.android)
 
 }

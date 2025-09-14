@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.assignment.R
 import com.example.assignment.data.model.HoldingData
 import com.example.assignment.databinding.HoldingListBinding
-import com.example.assignment.utils.toAmount
+import com.example.assignment.utils.formatAsCurrency
 
 class HoldingAdapter : RecyclerView.Adapter<HoldingAdapter.ViewHolder>() {
 
@@ -34,9 +34,9 @@ class HoldingAdapter : RecyclerView.Adapter<HoldingAdapter.ViewHolder>() {
         with(holder.binding) {
             val context = holder.itemView.context
             lblSymbol.text = item.symbol
-            lblLtp.text = context.toAmount(item.ltp)
+            lblLtp.text = context.formatAsCurrency(item.ltp)
             lblNetQty.text = String.format(item.quantity.toString())
-            lblPnL.text = context.toAmount(item.pnl)
+            lblPnL.text = context.formatAsCurrency(item.pnl)
             val color = if (item.pnl > 0) R.color.green else R.color.red
             lblPnL.setTextColor(ContextCompat.getColor(context, color))
         }

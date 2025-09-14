@@ -35,7 +35,7 @@ fun View.showSnackBar(
     snackBar.show()
 }
 
-fun Context.toAmount(amount: Double): String {
+fun Context.formatAsCurrency(amount: Double): String {
     val string = if (amount > 0) R.string.lbl_pos_amt else R.string.lbl_neg_amt
     return this.getString(string, amount.absoluteValue)
 }

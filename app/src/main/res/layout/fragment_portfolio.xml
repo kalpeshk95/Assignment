@@ -7,7 +7,7 @@
     tools:context=".ui.portfolio.PortfolioFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvHolding"
+        android:id="@+id/rvHoldings"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomView"
@@ -40,11 +40,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:constraint_referenced_ids="rvHolding,  bottomView" />
+        app:constraint_referenced_ids="rvHoldings, bottomView" />
 
     <include
-        android:id="@+id/noInternetLayout"
-        layout="@layout/no_internet_layout"
+        android:id="@+id/errorView"
+        layout="@layout/error_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

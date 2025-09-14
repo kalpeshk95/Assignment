@@ -6,14 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.assignment.R
 import com.example.assignment.databinding.FragmentPortfolioBinding
+import com.example.assignment.utils.formatAsCurrency
 import com.example.assignment.utils.gone
 import com.example.assignment.utils.setTextColorRes
-import com.example.assignment.utils.showSnackBar
-import com.example.assignment.utils.toAmount
 import com.example.assignment.utils.visible
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -23,8 +24,8 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
     private var _binding: FragmentPortfolioBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel by viewModel<PortfolioVm>()
-    private val holdingAdapter by lazy { HoldingAdapter() }
+    private val viewModel: PortfolioVm by viewModel()
+    private val holdingsAdapter by lazy { HoldingAdapter() }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,26 +44,30 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
     }
 
     private fun initView() {
-        with(binding.rvHolding) {
+        with(binding.rvHoldings) {
             layoutManager = LinearLayoutManager(context)
-            adapter = holdingAdapter
+            adapter = holdingsAdapter
         }
     }
 
     private fun observer() {
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.portfolioState.collect { state ->
-                showLoading(state.isLoading)
-                handleNetworkStatus(state.isNetworkAvailable, state.errorMessage)
-                state.holdingList?.let { setBottomData(state) } // Update UI with state
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.portfolioState.collect { state ->
+                        showLoading(state)
+                        handleError(state)
+                        showSuccess(state)
+                    }
+                }
             }
         }
     }
 
-    private fun showLoading(loading: Boolean) {
+    private fun showLoading(state: PortfolioUiState) {
         with(binding) {
-            if (loading) {
+            if (state is PortfolioUiState.Loading) {
                 bottomView.main.gone()
                 progressBar.visible()
             } else {
@@ -72,33 +77,42 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
         }
     }
 
-    private fun setBottomData(it: PortfolioState) {
-        it.holdingList?.let { holdingList ->
-            holdingAdapter.setItems(holdingList)
-            val todayPnLColor = if (it.todayPnL >= 0) R.color.green else R.color.red
-            val profitLossColor = if (it.profitLoss >= 0) R.color.green else R.color.red
-            binding.viewGroup.visible()
-            with(binding.bottomView) {
-                lblCurrentVal.text = requireContext().toAmount(it.currentVal)
-                lblTotalInv.text = requireContext().toAmount(it.totalInv)
-                lblTodayPnL.text = requireContext().toAmount(it.todayPnL)
-                lblTodayPnL.setTextColorRes(todayPnLColor)
-                lblProfitLoss.text = requireContext().toAmount(it.profitLoss)
-                lblProfitLossPer.text = getString(R.string.lbl_percentage, it.profitLossPercent)
-                lblProfitLoss.setTextColorRes(profitLossColor)
-                lblProfitLossPer.setTextColorRes(profitLossColor)
+    private fun showSuccess(state: PortfolioUiState) {
+        if (state is PortfolioUiState.Success) {
+            state.holdingList.let { holdingList ->
+                holdingsAdapter.setItems(holdingList)
+                val todayPnLColor = if (state.todayPnL >= 0) R.color.green else R.color.red
+                val profitLossColor = if (state.profitLoss >= 0) R.color.green else R.color.red
+                with(binding) {
+                    progressBar.gone()
+                    errorView.root.gone()
+                    viewGroup.visible()
+                    with(bottomView) {
+                        lblCurrentVal.text = requireContext().formatAsCurrency(state.currentVal)
+                        lblTotalInv.text = requireContext().formatAsCurrency(state.totalInv)
+                        lblTodayPnL.text = requireContext().formatAsCurrency(state.todayPnL)
+                        lblTodayPnL.setTextColorRes(todayPnLColor)
+                        lblProfitLoss.text = requireContext().formatAsCurrency(state.profitLoss)
+                        lblProfitLossPer.text =
+                            getString(R.string.lbl_percentage, state.profitLossPercent)
+                        lblProfitLoss.setTextColorRes(profitLossColor)
+                        lblProfitLossPer.setTextColorRes(profitLossColor)
+                    }
+                }
             }
         }
     }
 
-    private fun handleNetworkStatus(isNetworkAvailable: Boolean, errorMessage: String?) {
-        with(binding) {
-            if (isNetworkAvailable) {
-                noInternetLayout.main.gone()
-            } else {
+    private fun handleError(state: PortfolioUiState) {
+        if (state is PortfolioUiState.Error) {
+            with(binding) {
+                progressBar.gone()
                 viewGroup.gone()
-                noInternetLayout.main.visible()
-                errorMessage?.let { root.showSnackBar(it, "OK") }
+                errorView.root.visible()
+                errorView.btnError.setOnClickListener {
+                    if (state.isRetryable) viewModel.refresh()
+                }
+                errorView.tvError.text = state.message
             }
         }
     }
@@ -126,8 +140,8 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
             }
         }
 
-        binding.noInternetLayout.retryButton.setOnClickListener {
-            viewModel.fetchHoldingData()
+        binding.errorView.btnError.setOnClickListener {
+            viewModel.refresh()
         }
     }
 

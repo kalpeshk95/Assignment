@@ -8,66 +8,90 @@ import com.example.assignment.data.model.toHoldingData
 import com.example.assignment.data.repository.NetworkRepository
 import com.example.assignment.data.source.Resource
 import com.example.assignment.utils.NetworkStatusHelper
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 class PortfolioVm(
     private val networkRepository: NetworkRepository,
-    private val networkStatusHelper: NetworkStatusHelper
+    private val networkStatusHelper: NetworkStatusHelper,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
-    private val _portfolioState = MutableStateFlow(PortfolioState(isLoading = true))
-    val portfolioState: StateFlow<PortfolioState> = _portfolioState.asStateFlow()
+    private val _portfolioState = MutableStateFlow<PortfolioUiState>(PortfolioUiState.Loading)
+    val portfolioState: StateFlow<PortfolioUiState> = _portfolioState.asStateFlow()
 
     init {
-        fetchHoldingData()
+        loadData()
     }
 
-    fun fetchHoldingData() {
-        viewModelScope.launch {
-            if (networkStatusHelper.isNetworkAvailable.value) {
-                networkRepository.fetchHoldingData().onEach {
-                    when (it) {
+    fun refresh() {
+        loadData()
+    }
+
+    private fun loadData() {
+
+        viewModelScope.launch(dispatcher) {
+
+            if (!networkStatusHelper.isNetworkAvailable.value) {
+                _portfolioState.value = PortfolioUiState.Error(
+                    message = "No internet connection",
+                    isRetryable = true
+                )
+                return@launch
+            }
+
+
+            networkRepository.fetchHoldingData().catch { exception ->
+                _portfolioState.value = PortfolioUiState.Error(
+                    message = exception.message ?: "An error occurred",
+                    isRetryable = true
+                )
+            }
+                .collect { resource ->
+                    when (resource) {
                         is Resource.Loading -> {
-                            _portfolioState.value = PortfolioState(isLoading = true)
+                            _portfolioState.value = PortfolioUiState.Loading
                         }
 
                         is Resource.Success -> {
-                            it.data?.let { list -> setData(list) }
+                            resource.data?.let { data ->
+                                updateUiState(data)
+                            } ?: run {
+                                _portfolioState.value = PortfolioUiState.Error(
+                                    message = "No data available",
+                                    isRetryable = true
+                                )
+                            }
                         }
 
                         is Resource.Error -> {
-                            _portfolioState.value = PortfolioState(
-                                errorMessage = it.exception.toString(), isLoading = false
+                            _portfolioState.value = PortfolioUiState.Error(
+                                message = resource.exception.toString(),
+                                isRetryable = true
                             )
                         }
                     }
-                }.launchIn(viewModelScope)
-            } else {
-                // Network is unavailable, update state
-                _portfolioState.value = PortfolioState(
-                    isLoading = false,
-                    isNetworkAvailable = false // Update network status
-                )
-            }
+                }
         }
     }
 
-    private fun setData(list: List<UserHoldingItem>) {
-        val item = list.toHoldingData()
-        val currentVal = item.sumOf { it.ltp * it.quantity }
-        val totalInv = item.sumOf { it.avgPrice * it.quantity }
-        val todayPnL = item.sumOf { it.pnl }
+    private fun updateUiState(holdings: List<UserHoldingItem>) {
+        val holdingData = holdings.toHoldingData()
+        val currentVal = holdingData.sumOf { it.ltp * it.quantity }
+        val totalInv = holdingData.sumOf { it.avgPrice * it.quantity }
+        val todayPnL = holdingData.sumOf { it.pnl }
         val profitLoss = currentVal - totalInv
-        val profitLossPercent = ((profitLoss / totalInv) * 100).absoluteValue
-        _portfolioState.value = PortfolioState(
-            holdingList = list.toHoldingData(),
-            isLoading = false,
+        val profitLossPercent =
+            if (totalInv > 0) ((profitLoss / totalInv) * 100).absoluteValue else 0.0
+
+        _portfolioState.value = PortfolioUiState.Success(
+            holdingList = holdingData,
             currentVal = currentVal,
             totalInv = totalInv,
             todayPnL = todayPnL,
@@ -82,14 +106,16 @@ class PortfolioVm(
     }
 }
 
-data class PortfolioState(
-    val holdingList: List<HoldingData>? = null,
-    val isLoading: Boolean = false,
-    val currentVal: Double = 0.0,
-    val totalInv: Double = 0.0,
-    val todayPnL: Double = 0.0,
-    val profitLoss: Double = 0.0,
-    val profitLossPercent: Double = 0.0,
-    val errorMessage: String? = null,
-    val isNetworkAvailable: Boolean = true
-)
+sealed class PortfolioUiState {
+    object Loading : PortfolioUiState()
+    data class Success(
+        val holdingList: List<HoldingData>,
+        val currentVal: Double,
+        val totalInv: Double,
+        val todayPnL: Double,
+        val profitLoss: Double,
+        val profitLossPercent: Double
+    ) : PortfolioUiState()
+
+    data class Error(val message: String, val isRetryable: Boolean = true) : PortfolioUiState()
+}
