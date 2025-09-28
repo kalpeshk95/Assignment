@@ -16,8 +16,10 @@ import com.example.assignment.utils.formatAsCurrency
 import com.example.assignment.utils.gone
 import com.example.assignment.utils.setTextColorRes
 import com.example.assignment.utils.visible
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlin.compareTo
 
 class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
 
@@ -25,7 +27,11 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
     private val binding get() = _binding!!
 
     private val viewModel: PortfolioVm by viewModel()
-    private val holdingsAdapter by lazy { HoldingAdapter() }
+    private val holdingsAdapter by lazy {
+        HoldingAdapter().apply {
+            setHasStableIds(true)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,77 +50,117 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
     }
 
     private fun initView() {
-        with(binding.rvHoldings) {
-            layoutManager = LinearLayoutManager(context)
-            adapter = holdingsAdapter
+        with(binding) {
+            // Setup RecyclerView
+            rvHoldings.layoutManager = LinearLayoutManager(context)
+            rvHoldings.adapter = holdingsAdapter
+
+            // Setup SwipeRefreshLayout
+            swipeRefreshLayout.setColorSchemeResources(
+                R.color.purple_500,
+                R.color.teal_700,
+                R.color.green
+            )
+            swipeRefreshLayout.setOnRefreshListener {
+                viewModel.refresh()
+            }
         }
     }
 
     private fun observer() {
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.portfolioState.collect { state ->
-                        showLoading(state)
-                        handleError(state)
-                        showSuccess(state)
+                    viewModel.portfolioState.collectLatest { state ->
+                        when (state) {
+                            is PortfolioUiState.Loading -> showLoading()
+                            is PortfolioUiState.Success -> showSuccess(state)
+                            is PortfolioUiState.Error -> handleError(state)
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun showLoading(state: PortfolioUiState) {
+    private fun showLoading() {
         with(binding) {
-            if (state is PortfolioUiState.Loading) {
-                bottomView.main.gone()
+            // Only show progress in the SwipeRefreshLayout if it's not already refreshing
+            if (!swipeRefreshLayout.isRefreshing) {
                 progressBar.visible()
-            } else {
-                progressBar.gone()
-                bottomView.main.visible()
+                errorView.root.gone()
+                rvHoldings.gone()
+                viewGroup.gone()
             }
         }
     }
 
-    private fun showSuccess(state: PortfolioUiState) {
-        if (state is PortfolioUiState.Success) {
-            state.holdingList.let { holdingList ->
-                holdingsAdapter.setItems(holdingList)
-                val todayPnLColor = if (state.todayPnL >= 0) R.color.green else R.color.red
-                val profitLossColor = if (state.profitLoss >= 0) R.color.green else R.color.red
-                with(binding) {
-                    progressBar.gone()
-                    errorView.root.gone()
-                    viewGroup.visible()
-                    with(bottomView) {
-                        lblCurrentVal.text = requireContext().formatAsCurrency(state.currentVal)
-                        lblTotalInv.text = requireContext().formatAsCurrency(state.totalInv)
-                        lblTodayPnL.text = requireContext().formatAsCurrency(state.todayPnL)
-                        lblTodayPnL.setTextColorRes(todayPnLColor)
-                        lblProfitLoss.text = requireContext().formatAsCurrency(state.profitLoss)
-                        lblProfitLossPer.text =
-                            getString(R.string.lbl_percentage, state.profitLossPercent)
-                        lblProfitLoss.setTextColorRes(profitLossColor)
-                        lblProfitLossPer.setTextColorRes(profitLossColor)
-                    }
-                }
-            }
-        }
-    }
+    private fun showSuccess(state: PortfolioUiState.Success) {
+        try {
+            holdingsAdapter.submitList(state.holdingList)
 
-    private fun handleError(state: PortfolioUiState) {
-        if (state is PortfolioUiState.Error) {
+            val todayPnLColor = if (state.todayPnL >= 0) R.color.green else R.color.red
+            val profitLossColor = if (state.profitLoss >= 0) R.color.green else R.color.red
+
             with(binding) {
                 progressBar.gone()
-                viewGroup.gone()
-                errorView.root.visible()
-                errorView.btnError.setOnClickListener {
-                    if (state.isRetryable) viewModel.refresh()
+                swipeRefreshLayout.isRefreshing = false
+                errorView.root.gone()
+                viewGroup.visible()
+                rvHoldings.visible()
+                // Update offline indicator
+                if (state.isOffline) showOfflineIndicator() else hideOfflineIndicator()
+                // Update bottom view
+                with(bottomView) {
+                    lblCurrentVal.text = requireContext().formatAsCurrency(state.currentVal)
+                    lblTotalInv.text = requireContext().formatAsCurrency(state.totalInv)
+                    lblTodayPnL.apply {
+                        text = requireContext().formatAsCurrency(state.todayPnL)
+                        setTextColorRes(todayPnLColor)
+                    }
+                    lblProfitLoss.apply {
+                        text = requireContext().formatAsCurrency(state.profitLoss)
+                        setTextColorRes(profitLossColor)
+                    }
+                    lblProfitLossPer.apply {
+                        text = getString(R.string.lbl_percentage, state.profitLossPercent)
+                        setTextColorRes(profitLossColor)
+                    }
                 }
+            }
+        } catch (_: Exception) {
+            binding.progressBar.gone()
+            showError("Failed to display data")
+        }
+    }
+
+    private fun handleError(state: PortfolioUiState.Error) {
+        with(binding) {
+            progressBar.gone()
+            swipeRefreshLayout.isRefreshing = false
+
+            if (holdingsAdapter.itemCount == 0) {
+                viewGroup.gone()
+                rvHoldings.gone()
+                errorView.root.visible()
                 errorView.tvError.text = state.message
             }
         }
+    }
+
+    private fun showError(message: String) {
+        with(binding.errorView) {
+            root.visible()
+            tvError.text = message
+        }
+    }
+
+    private fun showOfflineIndicator() {
+        binding.offlineIndicator.visible()
+    }
+
+    private fun hideOfflineIndicator() {
+        binding.offlineIndicator.gone()
     }
 
     private fun initClick() {
@@ -140,13 +186,11 @@ class PortfolioFragment : Fragment(R.layout.fragment_portfolio) {
             }
         }
 
-        binding.errorView.btnError.setOnClickListener {
-            viewModel.refresh()
-        }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        binding.rvHoldings.adapter = null
         _binding = null
+        super.onDestroyView()
     }
 }

@@ -3,42 +3,58 @@ package com.example.assignment.di
 import com.example.assignment.BuildConfig
 import com.example.assignment.data.source.Network
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 import retrofit2.Retrofit
+import retrofit2.create
+import java.util.concurrent.TimeUnit
+
+private const val CONNECT_TIMEOUT = 30L
+private const val READ_TIMEOUT = 30L
+private const val WRITE_TIMEOUT = 30L
 
 val retrofitModule = module {
+    single { provideJson() }
+    single { provideLoggingInterceptor() }
+    single { provideOkHttpClient(get()) }
+    single { provideRetrofit(get(), get()) }
+    single { provideNetworkApi(get()) }
+}
 
-    single<Network> {
-        getNetwork(get())
-    }
+@OptIn(ExperimentalSerializationApi::class)
+private fun provideJson(): Json = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    encodeDefaults = true
+    explicitNulls = false
+    prettyPrint = true
+    coerceInputValues = true
+}
 
-    single<Retrofit> {
-        getRetrofit(get())
-    }
-
-    single<OkHttpClient> {
-        getOkHttpClient(get())
-    }
-
-    single<HttpLoggingInterceptor> {
-        getHttpLoggingInterceptor()
+private fun provideLoggingInterceptor(): HttpLoggingInterceptor {
+    return HttpLoggingInterceptor().apply {
+        level = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BODY
+        } else {
+            HttpLoggingInterceptor.Level.NONE
+        }
     }
 }
 
-private fun getNetwork(retroFit: Retrofit): Network {
-
-    return retroFit.create(Network::class.java)
+private fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
+    return OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor)
+        .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+        .build()
 }
 
-fun getRetrofit(okHttpClient: OkHttpClient): Retrofit {
-
-    // Create Retrofit instance
-    val json = Json { ignoreUnknownKeys = true } // Configure Json instance as needed
-
+private fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
     return Retrofit.Builder()
         .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
@@ -46,15 +62,4 @@ fun getRetrofit(okHttpClient: OkHttpClient): Retrofit {
         .build()
 }
 
-fun getOkHttpClient(httpLoggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
-    return OkHttpClient.Builder()
-        .addInterceptor(httpLoggingInterceptor)
-        .build()
-}
-
-fun getHttpLoggingInterceptor(): HttpLoggingInterceptor {
-    val httpLoggingInterceptor = HttpLoggingInterceptor()
-    httpLoggingInterceptor.level =
-        if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-    return httpLoggingInterceptor
-}
+private fun provideNetworkApi(retrofit: Retrofit): Network = retrofit.create()

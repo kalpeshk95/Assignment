@@ -10,11 +10,6 @@
     <string name="string_total_investment">Total Investment<sup>*</sup></string>
     <string name="string_today_s_pnl"><![CDATA[Today\'s Profit & Loss]]><sup>*</sup></string>
     <string name="string_profit_loss"><![CDATA[Profit & Loss]]><sup>*</sup></string>
-    <string name="watchlist">Watchlist</string>
-    <string name="orders">Orders</string>
-    <string name="portfolio">Portfolio</string>
-    <string name="funds">Funds</string>
-    <string name="invest">Invest</string>
     <string name="string_orders">Orders</string>
     <string name="string_watchlist">Watchlist</string>
     <string name="string_invest">Invest</string>
@@ -22,5 +17,6 @@
     <string name="string_portfolio">Portfolio</string>
     <string name="string_retry">Retry</string>
     <string name="string_no_internet">Please check your internet connection\nand try again</string>
-    <string name="string_coming_soon">Coming soon...</string>
+    <string name="string_coming_soon">Coming soon…</string>
+    <string name="offline_mode">Offline Mode: Showing cached data</string>
 </resources>

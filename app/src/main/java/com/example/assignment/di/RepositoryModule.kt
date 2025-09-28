@@ -4,5 +4,5 @@ import com.example.assignment.data.repository.NetworkRepository
 import org.koin.dsl.module
 
 val repoModule = module {
-    single { NetworkRepository(get()) }
+    single { NetworkRepository(get(), get()) }
 }

@@ -7,7 +7,7 @@ constraintlayout = "2.2.1"
 appcompat = "1.7.1"
 kotlinxCoroutinesAndroid = "1.10.2"
 material = "1.13.0"
-lifeCycle = "2.9.3"
+lifeCycle = "2.9.4"
 
 # Network
 retrofit2 = "3.0.0"
@@ -19,6 +19,10 @@ serialization = "2.2.20"
 # Dependency Injection
 koin = "4.1.1"
 
+# Database
+room = "2.8.0"
+ksp = "2.2.20-2.0.3"
+swiperefreshlayout = "1.1.0"
 
 [libraries]
 # AndroidX Core
@@ -42,9 +46,15 @@ okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-
 # Dependency Injection
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 
+# Room
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 
 [plugins]
 # Core plugins
@@ -55,3 +65,6 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinx-serialization = { id = "kotlinx-serialization" }
 jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serialization" }
 
+# KSP
+devtools-ksp = { id = "com.google.devtools.ksp" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

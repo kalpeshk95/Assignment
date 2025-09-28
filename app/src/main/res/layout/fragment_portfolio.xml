@@ -6,14 +6,35 @@
     android:layout_height="match_parent"
     tools:context=".ui.portfolio.PortfolioFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvHoldings"
+    <TextView
+        android:id="@+id/offlineIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/orange"
+        android:padding="8dp"
+        android:text="@string/offline_mode"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomView"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:itemCount="5"
-        tools:listitem="@layout/holding_list" />
+        app:layout_constraintTop_toBottomOf="@+id/offlineIndicator">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvHoldings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:itemCount="5"
+            tools:listitem="@layout/holding_list" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <include
         android:id="@+id/bottomView"
@@ -40,7 +61,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:constraint_referenced_ids="rvHoldings, bottomView" />
+        app:constraint_referenced_ids="offlineIndicator, bottomView" />
 
     <include
         android:id="@+id/errorView"
